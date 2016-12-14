@@ -848,14 +848,26 @@ class IMAP(object):
     def _set_socket_keepalive(self, sock):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-        with open('/proc/sys/net/ipv4/tcp_keepalive_time', 'r') as f:
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, (int)(f.read()))
+        try:
+            with open('/proc/sys/net/ipv4/tcp_keepalive_time', 'r') as f:
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, (int)(f.read()))
+        except IOError:
+            # Kernel did not expose reqeusted file; set as default instead.
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 7200)
 
-        with open('/proc/sys/net/ipv4/tcp_keepalive_intvl', 'r') as f:
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, (int)(f.read()))
+        try:
+            with open('/proc/sys/net/ipv4/tcp_keepalive_intvl', 'r') as f:
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, (int)(f.read()))
+        except IOError:
+            # Kernel did not expose reqeusted file; set as default instead.
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 75)
 
-        with open('/proc/sys/net/ipv4/tcp_keepalive_probes', 'r') as f:
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, (int)(f.read()))
+        try:
+            with open('/proc/sys/net/ipv4/tcp_keepalive_probes', 'r') as f:
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, (int)(f.read()))
+        except IOError:
+            # Kernel did not expose reqeusted file; set as default instead.
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 9)
 
     def _set_kolab_mailfolder_acls(self, acls, folder=None, update=False):
         # special case, folder has no ACLs assigned and update was requested,
